@@ -47,7 +47,7 @@ fmt.Fprintf(w, "%s\n", uj)
 }
 
 // Create User
-func (uc UserController) CreateUser (w http.ResponseWriter, r *http.Request){
+func (uc UserController) CreateUser (w http.ResponseWriter, r *http.Request, p httprouter.Params){
 	u := models.User{}
 
 	json.NewDecoder(r.Body).Decode(&u)
@@ -67,7 +67,7 @@ func (uc UserController) CreateUser (w http.ResponseWriter, r *http.Request){
 }
 
 // Delete User
-func (uc UserController) DeleteUser(w http.ResponseWriter, r *http.Request){
+func (uc UserController) DeleteUser(w http.ResponseWriter, r *http.Request, p httprouter.Params){
 	id := p.ByName("id")
 
 	if !bson.IsObjectIdHex(id){
@@ -77,10 +77,10 @@ func (uc UserController) DeleteUser(w http.ResponseWriter, r *http.Request){
 
 	oid := bson.ObjectIdHex(id)
 
-	if err := uc.session.DB("mongo-golang").C("users").Remove(){
+	if err := uc.session.DB("mongo-golang").C("users").RemoveId(oid); err != nil {
 		w.WriteHeader(404)
 	}
 
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "Deleted user", oid, "\n")
+	fmt.Fprint(w, "Deleted user", oid, "\n")
 }
