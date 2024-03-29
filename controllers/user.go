@@ -7,6 +7,7 @@ import(
 	"github.com/julienschmidt/httprouter"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"github.com/rufilboss/GOLANG_REST_API/models"
 )
 
 type UserController struct{
@@ -30,7 +31,7 @@ func (uc UserController) GetUser (w http.ResponseWriter, r *http.Request, p http
 
 	u := models.User{}
 
-	if err := uc.Session.DB("mongo-golang").C("users").FindId(oid).One(&u); err != nil {
+	if err := uc.session.DB("mongo-golang").C("users").FindId(oid).One(&u); err != nil {
 	w.WriteHeader(404)
 	return
 	}
@@ -45,3 +46,41 @@ w.WriteHeader(http.StatusOK)
 fmt.Fprintf(w, "%s\n", uj)
 }
 
+// Create User
+func (uc UserController) CreateUser (w http.ResponseWriter, r *http.Request){
+	u := models.User{}
+
+	json.NewDecoder(r.Body).Decode(&u)
+
+	u.Id = bson.NewObjectId()
+
+	uc.session.DB("mongo-golang").C("users").Insert(u)
+
+	uj, err := json.Marshal(u)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	fmt.Fprintf(w, "%s\n", uj)
+}
+
+// Delete User
+func (uc UserController) DeleteUser(w http.ResponseWriter, r *http.Request){
+	id := p.ByName("id")
+
+	if !bson.IsObjectIdHex(id){
+		w.WriteHeader(404)
+		return
+	}
+
+	oid := bson.ObjectIdHex(id)
+
+	if err := uc.session.DB("mongo-golang").C("users").Remove(){
+		w.WriteHeader(404)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Deleted user", oid, "\n")
+}
